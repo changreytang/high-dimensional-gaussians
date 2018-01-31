@@ -7,29 +7,33 @@ import matplotlib.pyplot as plt
 import scipy.spatial.distance as dist
 from numpy import random
 from scipy.stats import norm
+from sklearn import random_projection
 import decimal
 
 def calculate_distance_between_all_pairs(pts):
     dist_between_pts = list()
-    for i in range(0,20):
-        for j in range(i+1,20):
+    for i in range(0,len(pts)):
+        for j in range(i+1,len(pts)):
             dist_between_pts.append(dist.euclidean(pts[i],pts[j]))
     return dist_between_pts
 
 def project_data(pts, d, k):
-    mean = np.zeros(d, int)
-    cov = np.zeros((d,d), int)
-    np.fill_diagonal(cov, 1)
-    ulist = list()
-    for i in range(0, k):
-        ulist.append(random.multivariate_normal(mean,cov))
-    projected_data = list()
-    for pt in pts:
-        projected_pt = list()
-        for u in ulist:
-            projected_pt.append(np.dot(pt,u))
+    #mean = np.zeros(d, int)
+    #cov = np.zeros((d,d), int)
+    #np.fill_diagonal(cov, 1)
+    #ulist = list()
+    #for i in range(0, k):
+    #    ulist.append(random.multivariate_normal(mean,cov))
+    #projected_data = list()
+    #for pt in pts:
+    #    projected_pt = list()
+    #    for u in ulist:
+    #        projected_pt.append(np.dot(pt,u))
         #print(str(np.linalg.norm(projected_pt)) + ":" + str(math.sqrt(k)*np.linalg.norm(pt)))
-        projected_data.append(np.array(projected_pt))
+    #    projected_data.append(np.array(projected_pt))
+    transformer = random_projection.GaussianRandomProjection(k)
+    projected_data = transformer.fit_transform(pts)
+    #print(projected_data.shape)
     return projected_data
 
 def find_max_difference(orig_dist, proj_dist, k):
@@ -37,10 +41,10 @@ def find_max_difference(orig_dist, proj_dist, k):
     sqrtk_orig_dist = [d*sqrtk for d in orig_dist]
     max_diff = 0
     for i in range(0,len(orig_dist)):
-        cur_diff = abs(sqrtk_orig_dist[i] - proj_dist[i])
+        cur_diff = abs(orig_dist[i] - proj_dist[i])
         if (cur_diff > max_diff):
             max_diff = cur_diff
-    print("The maximum difference is %d which is roughly %f percent of k=%d" % (max_diff, max_diff/k, k))
+    print("The maximum difference is %d which is roughly %f percent  of k=%d" % (max_diff, (max_diff/k)*100, k))
 
 
 def main():
@@ -61,7 +65,9 @@ def main():
 
     #print(rand_pts)
     original_dists = calculate_distance_between_all_pairs(rand_pts)
+    #print(original_dists)
     projected_100 = project_data(rand_pts, d, 100)
+    #print(projected_100)
     projected_50 = project_data(rand_pts, d, 50)
     projected_10 = project_data(rand_pts, d, 10)
     projected_5 = project_data(rand_pts, d, 5)
@@ -71,6 +77,7 @@ def main():
     projected_1 = project_data(rand_pts, d, 1)
     #print(projected_100)
     dists_100 = calculate_distance_between_all_pairs(projected_100)
+    #print(dists_100)
     dists_50 = calculate_distance_between_all_pairs(projected_50)
     dists_10 = calculate_distance_between_all_pairs(projected_10)
     dists_5 = calculate_distance_between_all_pairs(projected_5)
